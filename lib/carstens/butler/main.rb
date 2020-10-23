@@ -42,7 +42,7 @@ post '/slack/challenge' do
   request.body.rewind
   raw_body = request.body.read
   data = JSON.parse raw_body
-  challenge = data['body']['challenge']
+  challenge = data['challenge']
   puts "raw_body: #{raw_body}"
   puts "data: #{data}"
   puts "challenge: #{challenge}"
