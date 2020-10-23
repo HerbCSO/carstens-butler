@@ -4,8 +4,6 @@ require 'sinatra'
 require 'time'
 require "pry" if development? || test?
 require "sinatra/reloader" if development?
-require 'rack/protection'
-use Rack::Protection # Something is better than nothing! ;]
 
 set :bind, '0.0.0.0'
 
