@@ -85,6 +85,7 @@ def deal_with_request(data, challenge)
   puts "data: #{data}"
   puts "challenge: #{challenge}"
   return challenge if challenge
+  return unless data.dig("event", "bot_id").nil? # Don't reply to bots, this sends you into a loop of talking to yourself! ;]
   post_url = ENV['POST_WEBHOOK_URL']
   HTTP.post(post_url, :body => {"text" => carsten_bot(data.dig("event", "text"))}.to_json)
 end
