@@ -1,3 +1,4 @@
+require 'http'
 require 'openssl'
 require 'sinatra'
 require 'time'
@@ -77,5 +78,7 @@ def deal_with_request(request, challenge)
   puts "Yay!"
   puts "request: #{request}"
   puts "challenge: #{challenge}"
-  challenge
+  return challenge if challenge
+  post_url = ENV['POST_WEBHOOK_URL']
+  HTTP.post(post_url, :body => {"text" => "This is a test"})
 end
