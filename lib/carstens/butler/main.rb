@@ -10,15 +10,8 @@ get '/' do
   'Hello world!'
 end
 
-post '/ask' do
-  puts "Headers: #{headers}"
-  puts "request.env: #{request.env}"
-  etag '', :new_resource => true
-  request.body.rewind
-  data = JSON.parse request.body.read
-  question = data.first[1].downcase
-  puts question
-
+def carsten_bot(question)
+  question ||= ""
   bad_clients = ["ngma","cms","tru"]
   probably_no = ["is it possible to","do you think we can","the client asked if we could","is it feasible to","can we","should we","can i","should i"]
   if bad_clients.any? { |client| question.include? client }
@@ -34,6 +27,17 @@ post '/ask' do
   else
     ";]"
   end
+end
+
+post '/ask' do
+  puts "Headers: #{headers}"
+  puts "request.env: #{request.env}"
+  etag '', :new_resource => true
+  request.body.rewind
+  data = JSON.parse request.body.read
+  question = data.first[1].downcase
+  puts question
+  carsten_bot(question)
 end
 
 post '/slack/challenge' do
@@ -53,7 +57,8 @@ post '/slack/challenge' do
   puts "timestamp: #{timestamp}"
   # The request timestamp is more than five minutes from local time.
   # It could be a replay attack, so let's ignore it.
-  if (Time.now.to_i - timestamp.to_i).abs > 60 * 5
+  limit = ENV["RACK_ENV"] == "production" ? 5 : 600
+  if (Time.now.to_i - timestamp.to_i).abs > 60 * limit
     puts "Old request, ignoring!"
     return
   end
@@ -66,7 +71,7 @@ post '/slack/challenge' do
     slack_signature = request.env['HTTP_X_SLACK_SIGNATURE']
     if hmac == slack_signature
       puts "hooray, the request came from Slack!"
-      return deal_with_request(request, challenge)
+      return deal_with_request(data, challenge)
     else
       puts "Failed key #{i}"
     end
@@ -74,11 +79,11 @@ post '/slack/challenge' do
   [401, "Invalid request, X-Slack-Signature: #{request.env['HTTP_X_SLACK_SIGNATURE']}, hmac: #{hmac}"]
 end
 
-def deal_with_request(request, challenge)
+def deal_with_request(data, challenge)
   puts "Yay!"
-  puts "request: #{request}"
+  puts "data: #{data}"
   puts "challenge: #{challenge}"
   return challenge if challenge
   post_url = ENV['POST_WEBHOOK_URL']
-  HTTP.post(post_url, :body => {"text" => "This is a test"})
+  HTTP.post(post_url, :body => {"text" => carsten_bot(data.dig("event", "text"))}.to_json)
 end
