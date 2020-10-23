@@ -1,4 +1,6 @@
+require 'openssl'
 require 'sinatra'
+require 'time'
 require "pry" if development? || test?
 require "sinatra/reloader" if development?
 set :bind, '0.0.0.0'
@@ -8,6 +10,8 @@ get '/' do
 end
 
 post '/ask' do
+  puts "Headers: #{headers}"
+  puts "request.env: #{request.env}"
   etag '', :new_resource => true
   request.body.rewind
   data = JSON.parse request.body.read
@@ -29,4 +33,39 @@ post '/ask' do
   else
     ";]"
   end
+end
+
+post '/slack/challenge' do
+  puts "headers: #{headers}"
+  puts "request.env: #{request.env}"
+  etag '', :new_resource => true
+  request.body.rewind
+  raw_body = request.body.read
+  data = JSON.parse raw_body
+  puts "raw_body: #{raw_body}"
+  puts "data: #{data}"
+
+
+  timestamp = request.env['HTTP_X_SLACK_REQUEST_TIMESTAMP']
+  puts timestamp
+  # The request timestamp is more than five minutes from local time.
+  # It could be a replay attack, so let's ignore it.
+  return if (Time.now.to_i - timestamp.to_i).abs > 60 * 5
+  basestring = ['v0', timestamp, raw_body].join(':')
+  key = ENV['SLACK_SIGNING_SECRET']
+  digest = OpenSSL::Digest.new('sha256')
+  hmac = "v0=#{OpenSSL::HMAC.hexdigest(digest, key, basestring)}"
+  slack_signature = request.env['HTTP_X_SLACK_SIGNATURE']
+  if hmac == slack_signature
+    # hooray, the request came from Slack!
+    deal_with_request(request)
+  else
+    [401, "Invalid request, X-Slack-Signature: #{request.env['HTTP_X_SLACK_SIGNATURE']}, hmac: #{hmac}"]
+  end
+end
+
+def deal_with_request(request)
+  puts "Yay!"
+  puts request
+  "OK, you can pass..."
 end
