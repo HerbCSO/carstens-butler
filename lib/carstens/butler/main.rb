@@ -57,16 +57,18 @@ post '/slack/challenge' do
     return
   end
   basestring = ['v0', timestamp, raw_body].join(':')
-  key = ENV['SLACK_SIGNING_SECRET']
+  keys = ENV['SLACK_SIGNING_SECRETS'].split(',')
   digest = OpenSSL::Digest.new('sha256')
-  hmac = "v0=#{OpenSSL::HMAC.hexdigest(digest, key, basestring)}"
-  slack_signature = request.env['HTTP_X_SLACK_SIGNATURE']
-  if hmac == slack_signature
-    puts "hooray, the request came from Slack!"
-    deal_with_request(request, challenge)
-  else
-    [401, "Invalid request, X-Slack-Signature: #{request.env['HTTP_X_SLACK_SIGNATURE']}, hmac: #{hmac}"]
+  keys.each do |key|
+    hmac = "v0=#{OpenSSL::HMAC.hexdigest(digest, key, basestring)}"
+    slack_signature = request.env['HTTP_X_SLACK_SIGNATURE']
+    if hmac == slack_signature
+      puts "hooray, the request came from Slack!"
+      deal_with_request(request, challenge)
+      return
+    end
   end
+  [401, "Invalid request, X-Slack-Signature: #{request.env['HTTP_X_SLACK_SIGNATURE']}, hmac: #{hmac}"]
 end
 
 def deal_with_request(request, challenge)
