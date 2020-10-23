@@ -65,8 +65,7 @@ post '/slack/challenge' do
     slack_signature = request.env['HTTP_X_SLACK_SIGNATURE']
     if hmac == slack_signature
       puts "hooray, the request came from Slack!"
-      deal_with_request(request, challenge)
-      return
+      return deal_with_request(request, challenge)
     else
       puts "Failed key #{i}"
     end
