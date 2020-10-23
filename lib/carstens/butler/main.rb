@@ -59,6 +59,7 @@ post '/slack/challenge' do
   basestring = ['v0', timestamp, raw_body].join(':')
   keys = ENV['SLACK_SIGNING_SECRETS'].split(',')
   digest = OpenSSL::Digest.new('sha256')
+  hmac = nil
   keys.each_with_index do |key, i|
     hmac = "v0=#{OpenSSL::HMAC.hexdigest(digest, key, basestring)}"
     slack_signature = request.env['HTTP_X_SLACK_SIGNATURE']
