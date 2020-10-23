@@ -42,30 +42,36 @@ post '/slack/challenge' do
   request.body.rewind
   raw_body = request.body.read
   data = JSON.parse raw_body
+  challenge = data['body']['challenge']
   puts "raw_body: #{raw_body}"
   puts "data: #{data}"
+  puts "challenge: #{challenge}"
 
 
   timestamp = request.env['HTTP_X_SLACK_REQUEST_TIMESTAMP']
-  puts timestamp
+  puts "timestamp: #{timestamp}"
   # The request timestamp is more than five minutes from local time.
   # It could be a replay attack, so let's ignore it.
-  return if (Time.now.to_i - timestamp.to_i).abs > 60 * 5
+  if (Time.now.to_i - timestamp.to_i).abs > 60 * 5
+    puts "Old request, ignoring!"
+    return
+  end
   basestring = ['v0', timestamp, raw_body].join(':')
   key = ENV['SLACK_SIGNING_SECRET']
   digest = OpenSSL::Digest.new('sha256')
   hmac = "v0=#{OpenSSL::HMAC.hexdigest(digest, key, basestring)}"
   slack_signature = request.env['HTTP_X_SLACK_SIGNATURE']
   if hmac == slack_signature
-    # hooray, the request came from Slack!
-    deal_with_request(request)
+    puts "hooray, the request came from Slack!"
+    deal_with_request(request, challenge)
   else
     [401, "Invalid request, X-Slack-Signature: #{request.env['HTTP_X_SLACK_SIGNATURE']}, hmac: #{hmac}"]
   end
 end
 
-def deal_with_request(request)
+def deal_with_request(request, challenge)
   puts "Yay!"
-  puts request
-  "OK, you can pass..."
+  puts "request: #{request}"
+  puts "challenge: #{challenge}"
+  challenge
 end
