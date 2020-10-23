@@ -1,3 +1,3 @@
 require "./lib/carstens/butler/main"
-$stdout.sync = false
+$stdout.sync = true
 run Sinatra::Application
