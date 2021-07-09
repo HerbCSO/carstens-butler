@@ -112,7 +112,7 @@ GEM
     rack-protection (2.1.0)
       rack
     rainbow (3.0.0)
-    rake (13.0.5)
+    rake (13.0.6)
     rspec (3.10.0)
       rspec-core (~> 3.10.0)
       rspec-expectations (~> 3.10.0)
