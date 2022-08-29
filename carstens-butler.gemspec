@@ -31,6 +31,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "sinatra"
   spec.add_dependency "sinatra-contrib"
   spec.add_dependency "thin"
+  spec.add_dependency "octokit", ">= 4.25.0" # addresses insecure permissions issue
 
   spec.add_development_dependency "github_changelog_generator"
   spec.add_development_dependency "pry"
