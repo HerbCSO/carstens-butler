@@ -28,7 +28,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "http"
-  spec.add_dependency "sinatra"
+  spec.add_dependency "sinatra", ">= 4.1"
   spec.add_dependency "sinatra-contrib"
   spec.add_dependency "thin"
   spec.add_dependency "octokit", ">= 4.25.0" # addresses insecure permissions issue
